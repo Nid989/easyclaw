@@ -1,12 +1,39 @@
 ---
 name: openclaw-config
 description: Manage OpenClaw bot configuration - channels, agents, security, and autopilot settings
-version: 2.0.0
+version: 3.0.0
 ---
 
-# OpenClaw Configuration & Debugging
+# OpenClaw Operations Runbook
 
-Fast reference for managing, debugging, and searching everything in `~/.openclaw`.
+Diagnose and fix real problems. Every command here is tested and works.
+
+---
+
+## Quick Health Check
+
+Run this first when anything seems wrong. Copy-paste the whole block:
+
+```bash
+echo "=== GATEWAY ===" && \
+ps aux | grep -c "[o]penclaw" && \
+echo "=== CONFIG JSON ===" && \
+python3 -m json.tool ~/.openclaw/openclaw.json > /dev/null 2>&1 && echo "JSON: OK" || echo "JSON: BROKEN" && \
+echo "=== CHANNELS ===" && \
+cat ~/.openclaw/openclaw.json | jq -r '.channels | to_entries[] | "\(.key): policy=\(.value.dmPolicy // "n/a") enabled=\(.value.enabled // "implicit")"' && \
+echo "=== PLUGINS ===" && \
+cat ~/.openclaw/openclaw.json | jq -r '.plugins.entries | to_entries[] | "\(.key): \(.value.enabled)"' && \
+echo "=== CREDS ===" && \
+ls ~/.openclaw/credentials/whatsapp/default/ 2>/dev/null | wc -l | xargs -I{} echo "WhatsApp keys: {} files" && \
+for d in ~/.openclaw/credentials/telegram/*/; do bot=$(basename "$d"); [ -f "$d/token.txt" ] && echo "Telegram $bot: OK" || echo "Telegram $bot: MISSING"; done && \
+[ -f ~/.openclaw/credentials/bird/cookies.json ] && echo "Bird cookies: OK" || echo "Bird cookies: MISSING" && \
+echo "=== CRON ===" && \
+cat ~/.openclaw/cron/jobs.json | jq -r '.jobs[] | "\(.name): enabled=\(.enabled) status=\(.state.lastStatus // "never") \(.state.lastError // "")"' && \
+echo "=== RECENT ERRORS ===" && \
+tail -10 ~/.openclaw/logs/gateway.err.log 2>/dev/null && \
+echo "=== MEMORY DB ===" && \
+sqlite3 ~/.openclaw/memory/main.sqlite "SELECT COUNT(*) || ' chunks, ' || (SELECT COUNT(*) FROM files) || ' files indexed' FROM chunks;" 2>/dev/null
+```
 
 ---
 
@@ -14,470 +41,545 @@ Fast reference for managing, debugging, and searching everything in `~/.openclaw
 
 ```
 ~/.openclaw/
-├── openclaw.json                    # MAIN CONFIG (channels, auth, gateway, plugins, skills)
-├── openclaw.json.bak                # Auto-backups (.bak, .bak.1, .bak.2 ...)
-├── exec-approvals.json              # Execution approval socket + defaults
+├── openclaw.json                    # MAIN CONFIG — channels, auth, gateway, plugins, skills
+├── openclaw.json.bak*               # Auto-backups (.bak, .bak.1, .bak.2 ...)
+├── exec-approvals.json              # Exec approval socket config
 │
 ├── agents/main/
-│   ├── agent/auth-profiles.json     # Auth tokens per provider
+│   ├── agent/auth-profiles.json     # Anthropic auth tokens
 │   └── sessions/
-│       ├── sessions.json            # SESSION INDEX — start here to find any session
-│       └── *.jsonl                  # Session transcripts (one JSON object per line)
+│       ├── sessions.json            # SESSION INDEX — keys are like agent:main:whatsapp:+1234
+│       └── *.jsonl                  # Session transcripts (one JSON per line)
 │
 ├── workspace/                       # Agent workspace (git-tracked)
-│   ├── SOUL.md                      # Personality & writing style
-│   ├── IDENTITY.md                  # Name, creature, vibe
-│   ├── USER.md                      # Owner context
-│   ├── AGENTS.md                    # Session behavior rules
-│   ├── BOOT.md                      # Boot-time instructions (autopilot protocol)
-│   ├── HEARTBEAT.md                 # Heartbeat task checklist
-│   ├── MEMORY.md                    # Long-term curated memory
-│   ├── TOOLS.md                     # Local tool notes (contacts, SSH, etc.)
-│   ├── memory/                      # Daily logs: YYYY-MM-DD.md
+│   ├── SOUL.md                      # Personality, writing style, tone rules
+│   ├── IDENTITY.md                  # Name, creature type, vibe
+│   ├── USER.md                      # Owner context and preferences
+│   ├── AGENTS.md                    # Session behavior, memory rules, safety
+│   ├── BOOT.md                      # Boot instructions (autopilot notification protocol)
+│   ├── HEARTBEAT.md                 # Periodic task checklist (empty = skip heartbeat)
+│   ├── MEMORY.md                    # Curated long-term memory (main session only)
+│   ├── TOOLS.md                     # Contacts, SSH hosts, device nicknames
+│   ├── memory/                      # Daily logs: YYYY-MM-DD.md, topic-chat.md
 │   └── skills/                      # Workspace-level skills
 │
-├── memory/main.sqlite               # Persistent memory database
+├── memory/main.sqlite               # Vector memory DB (Gemini embeddings, FTS5 search)
 │
 ├── logs/
-│   ├── gateway.log                  # Runtime events (startup, reload, pairing)
-│   ├── gateway.err.log              # Errors and stack traces
+│   ├── gateway.log                  # Runtime: startup, channel init, config reload, shutdown
+│   ├── gateway.err.log              # Errors: connection drops, API failures, timeouts
 │   └── commands.log                 # Command execution log
 │
 ├── cron/
-│   ├── jobs.json                    # Scheduled job definitions
-│   └── runs/                        # Per-job run logs (JSONL by job UUID)
+│   ├── jobs.json                    # Job definitions (schedule, payload, delivery target)
+│   └── runs/                        # Per-job run logs: {job-uuid}.jsonl
 │
 ├── credentials/
-│   ├── whatsapp/default/            # WA pre-keys, sessions, lid-mapping
-│   ├── telegram/{botname}/token.txt # Bot tokens
+│   ├── whatsapp/default/            # Baileys session: ~1400 app-state-sync-key-*.json files
+│   ├── telegram/{botname}/token.txt # Bot tokens (one per bot account)
 │   └── bird/cookies.json            # X/Twitter auth cookies
 │
-├── extensions/                      # Custom plugins (TypeScript)
-│   └── {name}/
-│       ├── openclaw.plugin.json     # Plugin manifest
-│       ├── index.ts                 # Entry point
-│       └── src/                     # Source files
+├── extensions/{name}/               # Custom plugins (TypeScript)
+│   ├── openclaw.plugin.json         # {"id", "channels", "configSchema"}
+│   ├── index.ts                     # Entry point
+│   └── src/                         # channel.ts, actions.ts, runtime.ts, types.ts
 │
-├── identity/
-│   ├── device.json                  # Device config
-│   └── device-auth.json             # Device auth keys
-│
-├── devices/
-│   ├── paired.json                  # Connected devices
-│   └── pending.json                 # Pending pairing requests
-│
-├── media/
-│   ├── inbound/                     # Received files (images, audio)
-│   └── browser/                     # Browser screenshots
-│
-├── browser/openclaw/user-data/      # Chromium profile
+├── identity/                        # device.json, device-auth.json
+├── devices/                         # paired.json, pending.json
+├── media/inbound/                   # Received images, audio files
+├── media/browser/                   # Browser screenshots
+├── browser/openclaw/user-data/      # Chromium profile (~180MB)
 ├── tools/signal-cli/                # Signal CLI binary
 ├── subagents/runs.json              # Sub-agent execution log
 ├── canvas/index.html                # Web canvas UI
-└── telegram/update-offset-*.json    # Telegram message offsets
+└── telegram/
+    ├── update-offset-coder.json     # {"lastUpdateId": N} — Telegram polling cursor
+    └── update-offset-sales.json     # Reset these to 0 to replay missed messages
 ```
 
 ---
 
-## Quick Debug Commands
+## Troubleshooting: WhatsApp
 
-### Search Sessions for Keywords
+### "I sent a message but got no reply"
+
+This is the #1 issue. The message arrives but the bot doesn't respond. Check in this order:
 
 ```bash
-# Find which sessions mention something (fast — searches filenames in index)
-grep -l "KEYWORD" ~/.openclaw/agents/main/sessions/*.jsonl
+# 1. Is the bot actually running?
+grep -i "whatsapp.*starting\|whatsapp.*listening" ~/.openclaw/logs/gateway.log | tail -5
 
-# Search session content for actual message text
-grep "KEYWORD" ~/.openclaw/agents/main/sessions/*.jsonl | head -20
+# 2. Check for 408 timeout drops (WhatsApp web disconnects frequently)
+grep -i "408\|499\|retry" ~/.openclaw/logs/gateway.err.log | tail -10
+# If you see "Web connection closed (status 408). Retry 1/12" — this is normal,
+# it auto-recovers. But if retries reach 12/12, the session dropped completely.
 
-# Search with context (2 lines around match)
-grep -C2 "KEYWORD" ~/.openclaw/agents/main/sessions/*.jsonl | head -40
+# 3. Check for cross-context messaging blocks
+grep -i "cross-context.*denied" ~/.openclaw/logs/gateway.err.log | tail -10
+# Common: "Cross-context messaging denied: action=send target provider "whatsapp" while bound to "signal""
+# This means the agent was in a Signal session and tried to reply on WhatsApp.
+# FIX: The message needs to come through in the WhatsApp session context, not Signal.
 
-# Find sessions by channel (signal, whatsapp, telegram)
-cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r 'to_entries[] | select(.value.lastChannel == "signal") | "\(.value.sessionId) | \(.value.origin.label // "unknown") | \(.value.updatedAt | . / 1000 | todate)"'
+# 4. Check the session exists for that contact
+cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r 'to_entries[] | select(.key | test("whatsapp")) | "\(.key) | \(.value.origin.label // "?")"'
 
-# Find sessions by contact name/number
-cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r 'to_entries[] | select(.value.origin.label // "" | test("KEYWORD"; "i")) | "\(.value.sessionId) | \(.value.origin.label) | \(.value.lastChannel)"'
+# 5. Check if the sender is allowed
+cat ~/.openclaw/openclaw.json | jq '.channels.whatsapp | {dmPolicy, allowFrom, selfChatMode, groupPolicy}'
+# If dmPolicy is "allowlist" and the sender isn't in allowFrom, message is silently dropped.
 
-# Most recent sessions (by last update)
-cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r '[to_entries[] | {key: .key, id: .value.sessionId, updated: .value.updatedAt, label: (.value.origin.label // .key), channel: (.value.lastChannel // "?")}] | sort_by(.updated) | reverse | .[:10][] | "\(.updated | . / 1000 | todate) | \(.channel) | \(.label)"'
+# 6. Check if it's a group message (groups are disabled by default)
+cat ~/.openclaw/openclaw.json | jq '.channels.whatsapp.groupPolicy'
+# "disabled" means ALL group messages are ignored.
 
-# Read a specific session transcript (last 30 messages)
-tail -30 ~/.openclaw/agents/main/sessions/SESSION_ID.jsonl | python3 -c "
+# 7. Check for lane congestion (agent busy with another task)
+grep "lane wait exceeded" ~/.openclaw/logs/gateway.err.log | tail -5
+# If the agent is stuck on a long LLM call, new messages queue up.
+
+# 8. Check for agent run timeout
+grep "embedded run timeout" ~/.openclaw/logs/gateway.err.log | tail -5
+# Hard limit is 600s (10 min). If the agent's response takes longer, it's killed.
+```
+
+### "WhatsApp fully disconnected"
+
+```bash
+# Check credential files exist (should be ~1400 files)
+ls ~/.openclaw/credentials/whatsapp/default/ | wc -l
+
+# If 0 files: session was never created or got wiped
+# Fix: re-pair with `openclaw configure`
+
+# Check for QR/pairing events
+grep -i "pair\|link\|qr\|scan\|logged out" ~/.openclaw/logs/gateway.log | tail -10
+
+# Check for Baileys errors
+grep -i "baileys\|DisconnectReason\|logout\|stream:error" ~/.openclaw/logs/gateway.err.log | tail -20
+
+# Nuclear fix: delete credentials and re-pair
+# rm -rf ~/.openclaw/credentials/whatsapp/default/
+# openclaw configure
+```
+
+---
+
+## Troubleshooting: Telegram
+
+### "Bots have issues / forget things"
+
+Two separate problems that look the same:
+
+```bash
+# 1. Check for config validation errors (THE COMMON ONE)
+grep -i "telegram.*unrecognized\|telegram.*invalid\|telegram.*policy" ~/.openclaw/logs/gateway.err.log | tail -10
+# Known issue: the keys "token" and "username" under accounts are not recognized.
+# The correct field is "botToken", not "token".
+
+# 2. Check the actual config
+cat ~/.openclaw/openclaw.json | jq '.channels.telegram'
+# Verify each bot has "botToken" (not "token") and "name" fields.
+
+# 3. Check polling status — bots die after getUpdates timeout
+grep -i "telegram.*exit\|telegram.*timeout\|getUpdates" ~/.openclaw/logs/gateway.err.log | tail -10
+# "[telegram] [sales] channel exited: Request to 'getUpdates' timed out after 500 seconds"
+# This means the bot lost connection to Telegram's API and stopped listening.
+# Fix: restart gateway — `openclaw gateway restart`
+
+# 4. Check the polling offset (if bot "forgets" or replays old messages)
+cat ~/.openclaw/telegram/update-offset-coder.json
+cat ~/.openclaw/telegram/update-offset-sales.json
+# If lastUpdateId is stuck or 0, the bot will reprocess old messages.
+# To skip to latest: the gateway sets this automatically on restart.
+
+# 5. Check if both bots are starting
+grep -i "telegram.*starting\|telegram.*coder\|telegram.*sales" ~/.openclaw/logs/gateway.log | tail -10
+
+# 6. "Bot forgets" — this is usually a session issue, not Telegram
+# Each Telegram user gets their own session in sessions.json.
+# Check if the session exists:
+cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r 'to_entries[] | select(.key | test("telegram")) | "\(.key) | \(.value.origin.label // "?")"'
+
+# 7. Check if compaction happened (context window pruned = "forgot")
+SESS_ID="paste-session-id"
+grep '"compaction"' ~/.openclaw/agents/main/sessions/$SESS_ID.jsonl | wc -l
+# If compaction count > 0, old messages were pruned from context.
+# The agent's compaction mode is:
+cat ~/.openclaw/openclaw.json | jq '.agents.defaults.compaction'
+```
+
+### Telegram config fix template
+
+```bash
+# Correct Telegram config structure:
+cat ~/.openclaw/openclaw.json | jq '.channels.telegram = {
+  "enabled": true,
+  "accounts": {
+    "coder": {
+      "name": "Bot Display Name",
+      "enabled": true,
+      "botToken": "your-bot-token-here"
+    },
+    "sales": {
+      "name": "Sales Bot Name",
+      "enabled": true,
+      "botToken": "your-bot-token-here"
+    }
+  },
+  "dmPolicy": "pairing",
+  "groupPolicy": "disabled"
+}' > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
+```
+
+---
+
+## Troubleshooting: Signal
+
+### "Signal RPC Failed to send message"
+
+This blocks cron jobs and cross-channel notifications.
+
+```bash
+# 1. Check if signal-cli process is alive
+ps aux | grep "[s]ignal-cli"
+
+# 2. Check the RPC endpoint
+grep -i "signal.*starting\|signal.*8080\|signal.*rpc" ~/.openclaw/logs/gateway.log | tail -10
+# Should see: "[signal] [default] starting provider (http://127.0.0.1:8080)"
+
+# 3. Check for connection instability
+grep -i "HikariPool\|reconnecting\|SSE stream error\|terminated" ~/.openclaw/logs/gateway.err.log | tail -10
+# "HikariPool-1 - Thread starvation or clock leap detected" = signal-cli internal DB issue
+# "SSE stream error: TypeError: terminated" = lost connection to signal-cli daemon
+
+# 4. Check for rate limiting
+grep -i "signal.*rate" ~/.openclaw/logs/gateway.err.log | tail -5
+# "Signal RPC -5: Failed to send message due to rate limiting"
+
+# 5. Check for wrong target format
+grep -i "unknown target" ~/.openclaw/logs/gateway.err.log | tail -5
+# "Unknown target "adi" for Signal. Hint: <E.164|uuid:ID|...>"
+# The agent must use phone numbers (+1...) or uuid: format, not names.
+
+# 6. Fix profile name warning spam
+grep -c "No profile name set" ~/.openclaw/logs/gateway.err.log
+# If high count: run signal-cli updateProfile to set a name
+
+# 7. Test signal-cli directly
+ACCT=$(cat ~/.openclaw/openclaw.json | jq -r '.channels.signal.account')
+echo "Account: $ACCT"
+# signal-cli -a $ACCT send -m "test" +TARGET_NUMBER
+
+# 8. Check if the signal-cli daemon needs restart
+# The gateway manages signal-cli as a subprocess.
+# Restart the whole gateway: openclaw gateway restart
+```
+
+---
+
+## Troubleshooting: Cron Jobs
+
+```bash
+# 1. Overview of all jobs
+cat ~/.openclaw/cron/jobs.json | jq -r '.jobs[] | "\(.enabled | if . then "ON " else "OFF" end) \(.state.lastStatus // "never" | if . == "error" then "FAIL" elif . == "ok" then "OK  " else .  end) \(.name)"'
+
+# 2. Failing jobs with error details
+cat ~/.openclaw/cron/jobs.json | jq '.jobs[] | select(.state.lastStatus == "error") | {name, error: .state.lastError, lastRun: (.state.lastRunAtMs | . / 1000 | todate), id}'
+
+# 3. Read the actual run log for a failing job
+JOB_ID="paste-job-uuid-here"
+tail -20 ~/.openclaw/cron/runs/$JOB_ID.jsonl | python3 -c "
 import sys, json
 for line in sys.stdin:
-    obj = json.loads(line)
-    if obj.get('type') == 'message':
-        role = obj['message']['role']
-        text = ''.join(c.get('text','') for c in obj['message'].get('content',[]) if isinstance(c,dict))
-        if text.strip():
-            print(f'[{role}] {text[:200]}')
+    try:
+        obj = json.loads(line)
+        if obj.get('type') == 'message':
+            role = obj['message']['role']
+            text = ''.join(c.get('text','') for c in obj['message'].get('content',[]) if isinstance(c,dict))
+            if text.strip():
+                print(f'[{role}] {text[:300]}')
+    except: pass
 "
+
+# 4. Common cron failure causes:
+#    - "Signal RPC -1" → Signal daemon down, see Signal section above
+#    - "gateway timeout after 10000ms" → gateway was restarting when cron fired
+#    - "Brave Search 429" → free tier rate limit hit (2000 req/month)
+#    - "embedded run timeout" → job took longer than 600s
+
+# 5. Next scheduled run times
+cat ~/.openclaw/cron/jobs.json | jq -r '.jobs[] | select(.enabled) | "\(.name): \((.state.nextRunAtMs // 0) | . / 1000 | todate)"'
+
+# 6. Disable a broken job temporarily
+cat ~/.openclaw/cron/jobs.json | jq '(.jobs[] | select(.name == "JOB_NAME")).enabled = false' > /tmp/cron.json && mv /tmp/cron.json ~/.openclaw/cron/jobs.json
 ```
 
-### Check Logs
+---
+
+## Troubleshooting: Memory / "It Forgot"
+
+The memory system has 3 layers. When the agent "forgets," one of these broke:
+
+### Layer 1: Context window (within a session)
 
 ```bash
-# Recent gateway events (last 30 lines)
-tail -30 ~/.openclaw/logs/gateway.log
+# Check compaction count for a session (compaction = old messages pruned)
+grep -c '"compaction"' ~/.openclaw/agents/main/sessions/SESSION_ID.jsonl
+# 7 compactions = the agent has "forgotten" its earliest messages 7 times.
 
-# Recent errors
-tail -50 ~/.openclaw/logs/gateway.err.log
-
-# Follow logs live
-tail -f ~/.openclaw/logs/gateway.log
-
-# Search errors for a specific channel
-grep -i "signal\|whatsapp\|telegram" ~/.openclaw/logs/gateway.err.log | tail -20
-
-# Count errors by type
-grep -oP 'Error: [^"]+' ~/.openclaw/logs/gateway.err.log | sort | uniq -c | sort -rn | head -10
+# Check compaction mode
+cat ~/.openclaw/openclaw.json | jq '.agents.defaults.compaction'
+# "safeguard" = only compacts when hitting context limit
 ```
 
-### Cron Jobs
+### Layer 2: Workspace memory files
 
 ```bash
-# List all jobs with status
-cat ~/.openclaw/cron/jobs.json | jq '.jobs[] | {name, enabled, status: .state.lastStatus, error: .state.lastError, id}'
+# What daily memory files exist
+ls -la ~/.openclaw/workspace/memory/
 
-# Check failed jobs
-cat ~/.openclaw/cron/jobs.json | jq '.jobs[] | select(.state.lastStatus == "error") | {name, error: .state.lastError}'
+# What's in MEMORY.md (long-term curated)
+cat ~/.openclaw/workspace/MEMORY.md
 
-# View run history for a specific job
-tail -5 ~/.openclaw/cron/runs/JOB_UUID.jsonl
-
-# See next scheduled run times
-cat ~/.openclaw/cron/jobs.json | jq '.jobs[] | select(.enabled) | {name, nextRun: (.state.nextRunAtMs // 0 | . / 1000 | todate)}'
+# Search memory files for something specific
+grep -ri "KEYWORD" ~/.openclaw/workspace/memory/
 ```
 
-### Memory Database
+### Layer 3: Vector memory database (SQLite + Gemini embeddings)
 
 ```bash
-# List tables in memory DB
-sqlite3 ~/.openclaw/memory/main.sqlite ".tables"
+# What files are indexed
+sqlite3 ~/.openclaw/memory/main.sqlite "SELECT path, size, datetime(mtime/1000, 'unixepoch') as modified FROM files;"
 
-# Show table schemas
-sqlite3 ~/.openclaw/memory/main.sqlite ".schema"
+# How many chunks (text fragments) exist
+sqlite3 ~/.openclaw/memory/main.sqlite "SELECT COUNT(*) FROM chunks;"
 
-# Search memory for a keyword
-sqlite3 ~/.openclaw/memory/main.sqlite "SELECT * FROM memories WHERE content LIKE '%KEYWORD%' ORDER BY created_at DESC LIMIT 10;"
+# Search chunks by text (FTS5 full-text search)
+sqlite3 ~/.openclaw/memory/main.sqlite "SELECT substr(text, 1, 200) FROM chunks_fts WHERE chunks_fts MATCH 'KEYWORD' LIMIT 5;"
 
-# Count memories
-sqlite3 ~/.openclaw/memory/main.sqlite "SELECT COUNT(*) FROM memories;"
+# Check embedding config
+sqlite3 ~/.openclaw/memory/main.sqlite "SELECT value FROM meta WHERE key='memory_index_meta_v1';" | python3 -m json.tool
 
-# Recent memories
-sqlite3 ~/.openclaw/memory/main.sqlite "SELECT substr(content, 1, 100), created_at FROM memories ORDER BY created_at DESC LIMIT 10;"
+# Check for Gemini embedding rate limits (breaks indexing)
+grep -i "gemini.*batch.*failed\|RESOURCE_EXHAUSTED\|429" ~/.openclaw/logs/gateway.err.log | tail -10
+# "embeddings: gemini batch failed (2/2); disabling batch" = indexing degraded
+
+# Rebuild memory index (re-index all workspace files)
+# Delete the DB and restart gateway — it will rebuild:
+# rm ~/.openclaw/memory/main.sqlite && openclaw gateway restart
 ```
 
-### Channel Status
+---
+
+## Searching Sessions
+
+### Find a person's conversations
 
 ```bash
-# Quick channel overview from config
-cat ~/.openclaw/openclaw.json | jq '{
-  whatsapp: {policy: .channels.whatsapp.dmPolicy, selfChat: .channels.whatsapp.selfChatMode},
-  signal: {enabled: .channels.signal.enabled, policy: .channels.signal.dmPolicy, account: .channels.signal.account},
-  telegram: {enabled: .channels.telegram.enabled, policy: .channels.telegram.dmPolicy, bots: (.channels.telegram.accounts | keys)},
-  imessage: {enabled: .channels.imessage.enabled}
-}'
-
-# Which plugins are enabled
-cat ~/.openclaw/openclaw.json | jq '.plugins.entries'
-
-# Check gateway binding
-cat ~/.openclaw/openclaw.json | jq '{port: .gateway.port, bind: .gateway.bind, mode: .gateway.mode}'
+# Search session index by name (case-insensitive)
+cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r 'to_entries[] | select(.value.origin.label // "" | test("NAME"; "i")) | "\(.value.sessionId) | \(.value.lastChannel) | \(.value.origin.label)"'
 ```
 
-### Extensions
+### Find sessions by channel
 
 ```bash
-# List installed extensions
-ls ~/.openclaw/extensions/
-
-# View extension manifest
-cat ~/.openclaw/extensions/*/openclaw.plugin.json | jq .
-
-# Check extension source files
-find ~/.openclaw/extensions/ -name "*.ts" -not -path "*/node_modules/*"
+cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r 'to_entries[] | select(.value.lastChannel == "whatsapp") | "\(.value.sessionId) | \(.value.origin.label // .key)"'
+# Replace "whatsapp" with: signal, telegram, or check .key for cron sessions
 ```
 
-### Credentials Health Check
+### Most recent sessions
 
 ```bash
-# WhatsApp — check session files exist
-ls ~/.openclaw/credentials/whatsapp/default/ 2>/dev/null | head -5
-
-# Telegram — verify bot tokens exist (don't print them)
-for d in ~/.openclaw/credentials/telegram/*/; do
-  bot=$(basename "$d")
-  [ -f "$d/token.txt" ] && echo "$bot: OK" || echo "$bot: MISSING"
-done
-
-# Twitter/Bird — check cookies exist
-[ -f ~/.openclaw/credentials/bird/cookies.json ] && echo "Bird cookies: OK" || echo "Bird cookies: MISSING"
-
-# Signal — verify CLI exists
-[ -x "$(cat ~/.openclaw/openclaw.json | jq -r '.channels.signal.cliPath')" ] && echo "signal-cli: OK" || echo "signal-cli: MISSING or not executable"
+cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r '[to_entries[] | {id: .value.sessionId, updated: .value.updatedAt, label: (.value.origin.label // .key), ch: (.value.lastChannel // "cron")}] | sort_by(.updated) | reverse | .[:10][] | "\(.updated | . / 1000 | todate) | \(.ch) | \(.label)"'
 ```
 
-### Devices
+### Search message content across all sessions
 
 ```bash
-# Paired devices
-cat ~/.openclaw/devices/paired.json | jq .
+# Quick: find which session files contain a keyword
+grep -l "KEYWORD" ~/.openclaw/agents/main/sessions/*.jsonl
 
-# Pending pairing requests
-cat ~/.openclaw/devices/pending.json | jq .
+# Detailed: show matching messages with timestamps
+grep "KEYWORD" ~/.openclaw/agents/main/sessions/*.jsonl | python3 -c "
+import sys, json
+for line in sys.stdin:
+    path, data = line.split(':', 1)
+    try:
+        obj = json.loads(data)
+        if obj.get('type') == 'message':
+            role = obj['message']['role']
+            text = ''.join(c.get('text','') for c in obj['message'].get('content',[]) if isinstance(c,dict))
+            if text.strip():
+                sid = path.split('/')[-1].replace('.jsonl','')[:8]
+                ts = obj.get('timestamp','')[:19]
+                print(f'{ts} [{sid}] [{role}] {text[:200]}')
+    except: pass
+" | head -30
+```
+
+### Read a specific session transcript
+
+```bash
+# Last 30 messages from a session
+tail -50 ~/.openclaw/agents/main/sessions/SESSION_ID.jsonl | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        obj = json.loads(line)
+        if obj.get('type') == 'message':
+            role = obj['message']['role']
+            text = ''.join(c.get('text','') for c in obj['message'].get('content',[]) if isinstance(c,dict))
+            if text.strip() and role != 'toolResult':
+                print(f'[{role}] {text[:300]}')
+                print()
+    except: pass
+"
 ```
 
 ---
 
 ## Config Editing
 
-### openclaw.json Structure
+### Safe edit pattern
 
-| Section | What It Controls |
-|---|---|
-| `meta` | Version tracking, last-touched timestamps |
-| `wizard` | Last setup wizard run info |
-| `browser` | Chromium browser profile (enabled, profile name) |
-| `auth.profiles` | API provider auth tokens (anthropic, etc.) |
-| `agents.defaults` | Model, workspace path, concurrency, compaction |
-| `tools.web.search` | Brave search API config |
-| `tools.message` | Cross-context messaging settings |
-| `messages` | Ack reaction scope |
-| `commands` | Native command / skill modes |
-| `hooks.internal` | Internal hooks (boot-md, etc.) |
-| `channels.*` | Per-channel config (dmPolicy, allowFrom, groupPolicy) |
-| `gateway` | Port, bind, auth token, tailscale |
-| `skills.entries` | Skill-specific API keys and settings |
-| `plugins.entries` | Enable/disable each channel plugin |
-
-### Channel Security Modes
-
-| Mode | Behavior | Risk |
-|---|---|---|
-| `open` | Anyone can message, no restrictions | HIGH — anyone sends, you pay API |
-| `allowlist` | Only listed numbers/IDs get through | LOW — explicit control |
-| `pairing` | Unknown senders get a code, you approve | LOW — approval required |
-| `disabled` | Channel off | NONE |
-
-### Edit Config Safely
+Always: backup, edit with jq, restart.
 
 ```bash
-# 1. Always backup first
 cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak.manual
-
-# 2. Edit with jq (example: switch WhatsApp to allowlist)
-cat ~/.openclaw/openclaw.json | jq '.channels.whatsapp.dmPolicy = "allowlist" | .channels.whatsapp.allowFrom = ["+1XXXXXXXXXX"]' > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
-
-# 3. Restart gateway to apply
+jq 'YOUR_EDIT_HERE' ~/.openclaw/openclaw.json > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
 openclaw gateway restart
 ```
 
-### Common Config Changes
+### Common edits
 
-**Switch WhatsApp to allowlist:**
 ```bash
+# Switch WhatsApp to allowlist
 jq '.channels.whatsapp.dmPolicy = "allowlist" | .channels.whatsapp.allowFrom = ["+1XXXXXXXXXX"]' ~/.openclaw/openclaw.json > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
-```
 
-**Enable autopilot (WhatsApp open + BOOT.md notification protocol):**
-```bash
+# Enable WhatsApp autopilot (bot responds as you to everyone)
 jq '.channels.whatsapp += {dmPolicy: "open", selfChatMode: false, allowFrom: ["*"]}' ~/.openclaw/openclaw.json > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
-```
 
-**Add a number to Signal allowlist:**
-```bash
+# Add number to Signal allowlist
 jq '.channels.signal.allowFrom += ["+1XXXXXXXXXX"]' ~/.openclaw/openclaw.json > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
-```
 
-**Change default model:**
-```bash
+# Change model
 jq '.agents.defaults.models = {"anthropic/claude-sonnet-4": {"alias": "sonnet"}}' ~/.openclaw/openclaw.json > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
-```
 
-**Set concurrency:**
-```bash
+# Set concurrency
 jq '.agents.defaults.maxConcurrent = 10 | .agents.defaults.subagents.maxConcurrent = 10' ~/.openclaw/openclaw.json > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
-```
 
-**Disable a plugin:**
-```bash
+# Disable a plugin
 jq '.plugins.entries.imessage.enabled = false' ~/.openclaw/openclaw.json > /tmp/oc.json && mv /tmp/oc.json ~/.openclaw/openclaw.json
 ```
 
----
-
-## Troubleshooting Playbooks
-
-### "Channel not connecting"
+### Restore from backup
 
 ```bash
-# 1. Is the plugin enabled?
-cat ~/.openclaw/openclaw.json | jq '.plugins.entries.CHANNEL'
-
-# 2. Is the channel config present?
-cat ~/.openclaw/openclaw.json | jq '.channels.CHANNEL'
-
-# 3. Check credentials exist
-ls -la ~/.openclaw/credentials/CHANNEL/
-
-# 4. Check gateway logs for the channel
-grep -i "CHANNEL" ~/.openclaw/logs/gateway.log | tail -20
-grep -i "CHANNEL" ~/.openclaw/logs/gateway.err.log | tail -20
-
-# 5. Restart and watch
-openclaw gateway restart && tail -f ~/.openclaw/logs/gateway.log
-```
-
-### "Signal RPC Failed to send message"
-
-```bash
-# 1. Check signal-cli is installed and accessible
-which signal-cli || ls -la /opt/homebrew/bin/signal-cli
-
-# 2. Verify the bundled signal-cli
-ls ~/.openclaw/tools/signal-cli/*/signal-cli
-
-# 3. Check the configured account
-cat ~/.openclaw/openclaw.json | jq '.channels.signal'
-
-# 4. Test signal-cli directly
-signal-cli -a +ACCOUNT_NUMBER send -m "test" +TARGET_NUMBER
-
-# 5. Check if daemon is running
-ps aux | grep signal-cli
-
-# 6. Look for RPC errors
-grep -i "signal.*rpc\|signal.*error\|signal.*fail" ~/.openclaw/logs/gateway.err.log | tail -10
-```
-
-### "Cron job failing"
-
-```bash
-# 1. Check which jobs are failing
-cat ~/.openclaw/cron/jobs.json | jq '.jobs[] | select(.state.lastStatus == "error") | {name, id, error: .state.lastError, lastRun: (.state.lastRunAtMs | . / 1000 | todate)}'
-
-# 2. Read the run log for the failing job
-JOB_ID="paste-job-uuid-here"
-tail -20 ~/.openclaw/cron/runs/$JOB_ID.jsonl
-
-# 3. Check if it's a delivery error (channel down) vs task error
-grep "Failed to send\|channel.*error\|delivery" ~/.openclaw/cron/runs/$JOB_ID.jsonl | tail -5
-
-# 4. Manually trigger the job to test
-# (copy the payload.message from jobs.json and send it via the channel)
-```
-
-### "WhatsApp disconnected"
-
-```bash
-# 1. Check WA credential files
-ls -la ~/.openclaw/credentials/whatsapp/default/
-
-# 2. Check for WA errors in logs
-grep -i "whatsapp\|wa\|baileys" ~/.openclaw/logs/gateway.err.log | tail -20
-
-# 3. Check if phone is linked
-grep -i "pair\|link\|qr\|scan" ~/.openclaw/logs/gateway.log | tail -10
-
-# 4. Re-pair if needed
-openclaw configure  # re-run wizard
-```
-
-### "iMessage permission denied"
-
-```bash
-# 1. Check if chat.db is accessible
-ls -la ~/Library/Messages/chat.db
-
-# 2. Terminal needs Full Disk Access
-# System Settings → Privacy & Security → Full Disk Access → add your terminal app
-
-# 3. Check imsg CLI
-which imsg || ls /opt/homebrew/bin/imsg
-
-# 4. Test manually
-imsg chats | head -5
-```
-
-### "Config broken / gateway won't start"
-
-```bash
-# 1. Validate JSON syntax
-python3 -m json.tool ~/.openclaw/openclaw.json > /dev/null && echo "JSON OK" || echo "JSON BROKEN"
-
-# 2. If broken, restore backup
+# Latest backup
 cp ~/.openclaw/openclaw.json.bak ~/.openclaw/openclaw.json
 
-# 3. If all backups are bad
-ls -lt ~/.openclaw/openclaw.json.bak*  # pick an older one
+# List all backups by date
+ls -lt ~/.openclaw/openclaw.json.bak*
 
-# 4. Nuclear: re-run wizard
+# Validate JSON before restart
+python3 -m json.tool ~/.openclaw/openclaw.json > /dev/null && echo "OK" || echo "BROKEN"
+
+# Nuclear reset
 openclaw configure
 ```
 
-### "Can't find what someone said"
+---
+
+## Channel Security Modes
+
+| Mode | Behavior | Risk |
+|---|---|---|
+| `open` + `allowFrom: ["*"]` | Anyone can message, bot responds to all | HIGH — burns API credits, bot speaks as you |
+| `allowlist` + `allowFrom: ["+1..."]` | Only listed numbers get through | LOW — explicit control |
+| `pairing` | Unknown senders get a code, you approve | LOW — approval gate |
+| `disabled` | Channel completely off | NONE |
+
+### Check current security posture
 
 ```bash
-# Step 1: Search session index for the person
-cat ~/.openclaw/agents/main/sessions/sessions.json | jq -r 'to_entries[] | select(.value.origin.label // "" | test("NAME"; "i")) | "\(.value.sessionId) \(.value.lastChannel) \(.value.origin.label)"'
-
-# Step 2: Search across all sessions for their message
-grep -l "KEYWORD" ~/.openclaw/agents/main/sessions/*.jsonl
-
-# Step 3: Once you have the session ID, read it
-python3 -c "
-import json, sys
-for line in open(sys.argv[1]):
-    obj = json.loads(line)
-    if obj.get('type') == 'message':
-        role = obj['message']['role']
-        text = ''.join(c.get('text','') for c in obj['message'].get('content',[]) if isinstance(c, dict))
-        if text.strip() and 'KEYWORD' in text.lower():
-            ts = obj.get('timestamp','?')
-            print(f'[{ts}] [{role}] {text[:300]}')
-" ~/.openclaw/agents/main/sessions/SESSION_ID.jsonl
-
-# Step 4: Also check workspace memory
-grep -ri "KEYWORD" ~/.openclaw/workspace/memory/
+cat ~/.openclaw/openclaw.json | jq '{
+  whatsapp: {policy: .channels.whatsapp.dmPolicy, from: .channels.whatsapp.allowFrom, groups: .channels.whatsapp.groupPolicy, selfChat: .channels.whatsapp.selfChatMode},
+  signal: {policy: .channels.signal.dmPolicy, from: .channels.signal.allowFrom, groups: .channels.signal.groupPolicy},
+  telegram: {policy: .channels.telegram.dmPolicy, groups: .channels.telegram.groupPolicy, bots: [.channels.telegram.accounts | to_entries[] | "\(.key)=\(.value.enabled)"]},
+  imessage: {enabled: .channels.imessage.enabled, policy: .channels.imessage.dmPolicy}
+}'
 ```
 
 ---
 
-## Workspace Files Reference
+## Workspace Files
 
-| File | Purpose | When to Edit |
+| File | What | When to edit |
 |---|---|---|
-| `SOUL.md` | Personality, writing style, boundaries | To change how the bot communicates |
-| `IDENTITY.md` | Name, creature type, emoji, avatar | To rebrand the bot |
+| `SOUL.md` | Personality: tone, style ("no em dashes, lowercase casual") | To change how the bot talks |
+| `IDENTITY.md` | Name (Jarvis), creature type, emoji | To rebrand |
 | `USER.md` | Owner info, preferences | When user context changes |
-| `AGENTS.md` | Session behavior, memory rules, safety | To change bot operating rules |
-| `BOOT.md` | Boot-time instructions (autopilot notification protocol) | To change startup behavior |
-| `HEARTBEAT.md` | Periodic task checklist | To add/remove heartbeat checks |
-| `MEMORY.md` | Curated long-term memory | Bot updates this itself |
-| `TOOLS.md` | Local tool notes (contacts, SSH, etc.) | To add contacts, device info |
-| `memory/*.md` | Daily conversation logs | Bot writes these automatically |
+| `AGENTS.md` | Operating rules: memory protocol, safety, group chat behavior, heartbeat instructions | To change bot behavior |
+| `BOOT.md` | Startup instructions (autopilot notification protocol: WA → Signal) | To change what happens on boot |
+| `HEARTBEAT.md` | Periodic checklist (empty = no heartbeat API calls) | To add/remove periodic tasks |
+| `MEMORY.md` | Curated long-term memory (loaded only in main/direct sessions) | Bot manages this itself |
+| `TOOLS.md` | Contacts, SSH hosts, device nicknames | To add local tool notes |
+| `memory/*.md` | Daily raw logs, topic-specific chat logs | Bot writes automatically |
 
 ---
 
 ## Session JSONL Format
 
-Each line is one of these types:
+Each `.jsonl` file has one JSON object per line. Types:
 
+| type | What |
+|---|---|
+| `session` | Session header: id, timestamp, cwd |
+| `message` | Conversation turn: role (user/assistant/toolResult), content, model, usage |
+| `custom` | Metadata: `model-snapshot`, `openclaw.cache-ttl` |
+| `compaction` | Context window was pruned (old messages dropped) |
+| `model_change` | Model was switched mid-session |
+| `thinking_level_change` | Thinking level adjusted |
+
+Session index (`sessions.json`) keys:
+- Pattern: `agent:main:{channel}:{contact}` or `agent:main:cron:{job-uuid}`
+- Fields: `sessionId` (UUID = filename), `lastChannel`, `origin.label` (human name), `origin.from` (canonical address), `updatedAt` (epoch ms), `chatType` (direct/group)
+
+---
+
+## Gateway Startup Sequence
+
+Normal startup takes ~3 seconds:
 ```
-{"type": "session", "id": "...", "timestamp": "...", "cwd": "..."}
-{"type": "message", "id": "...", "message": {"role": "user|assistant", "content": [{"type": "text", "text": "..."}], "model": "...", "usage": {...}}}
-{"type": "custom", "customType": "model-snapshot|openclaw.cache-ttl", "data": {...}}
+[heartbeat] started
+[gateway] listening on ws://127.0.0.1:18789
+[browser/service] Browser control service ready
+[hooks] loaded 3 internal hook handlers (boot-md, command-logger, session-memory)
+[whatsapp] [default] starting provider
+[signal] [default] starting provider (http://127.0.0.1:8080)
+[telegram] [coder] starting provider
+[telegram] [sales] starting provider
+[whatsapp] Listening for personal WhatsApp inbound messages.
+[signal] signal-cli: Started HTTP server on /127.0.0.1:8080
 ```
 
-Key fields in session index (`sessions.json`):
-- `sessionId` — UUID, matches the JSONL filename
-- `lastChannel` — signal, whatsapp, telegram, etc.
-- `origin.label` — human-readable sender label (name + ID)
-- `origin.from` — canonical sender address
-- `updatedAt` — epoch ms of last activity
-- `chatType` — direct, group, etc.
+If any line is missing, that component failed to start. Check `gateway.err.log`.
+
+---
+
+## Known Error Patterns
+
+| Error | Meaning | Fix |
+|---|---|---|
+| `Web connection closed (status 408)` | WhatsApp web timeout, auto-retries up to 12x | Usually self-heals. If reaches 12/12, restart gateway |
+| `Signal RPC -1: Failed to send message` | signal-cli daemon lost connection | Restart gateway |
+| `Signal RPC -5: Failed to send message due to rate limiting` | Signal rate limit | Wait and retry, reduce message frequency |
+| `No profile name set` (signal-cli WARN) | Floods logs, harmless | `signal-cli -a +ACCOUNT updateProfile --given-name "Name"` |
+| `Cross-context messaging denied` | Agent tried to send across channels | Not a bug — security guardrail. Message must originate from correct channel session |
+| `getUpdates timed out after 500 seconds` | Telegram bot lost polling connection | Restart gateway |
+| `Unrecognized keys: "token", "username"` | Wrong config keys for Telegram bots | Use `botToken` not `token` in openclaw.json |
+| `RESOURCE_EXHAUSTED` (Gemini 429) | Embedding rate limit | Reduce workspace file churn, or upgrade Gemini quota |
+| `lane wait exceeded` | Agent blocked on long LLM call | Wait, or restart if stuck > 2 min |
+| `embedded run timeout: timeoutMs=600000` | Agent response exceeded 10 min | Break task into smaller pieces |
+| `gateway timeout after 10000ms` | Gateway unreachable during restart window | Cron fired while gateway was down — transient |
 
 ---
 
@@ -491,9 +593,20 @@ Key fields in session index (`sessions.json`):
 └── src/
     ├── channel.ts          # Channel implementation
     ├── actions.ts          # Available actions
-    ├── runtime.ts          # Runtime initialization
-    ├── config-schema.ts    # Configuration schema
+    ├── runtime.ts          # Runtime init
+    ├── config-schema.ts    # Config schema
     └── types.ts            # TypeScript types
+```
+
+```bash
+# List extensions
+ls ~/.openclaw/extensions/
+
+# View manifests
+cat ~/.openclaw/extensions/*/openclaw.plugin.json | jq .
+
+# List source files
+find ~/.openclaw/extensions/ -name "*.ts" -not -path "*/node_modules/*"
 ```
 
 ---
