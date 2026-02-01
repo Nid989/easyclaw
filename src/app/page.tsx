@@ -163,52 +163,81 @@ export default function Home() {
 
       {/* Growth chart */}
       <section className="py-24 px-6 bg-[var(--color-bg-alt)]">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-4"
-          >
-            <p className="text-xs font-medium tracking-widest uppercase text-[var(--color-text-tertiary)] mb-3">
-              Open source
-            </p>
-            <h2
-              className="text-3xl sm:text-4xl italic tracking-tight mb-2"
-              style={{ fontFamily: "var(--font-serif)" }}
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-12 lg:gap-16 items-center">
+            {/* Left — chart */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.5 }}
+                className="mb-4"
+              >
+                <p className="text-xs font-medium tracking-widest uppercase text-[var(--color-text-tertiary)] mb-3">
+                  Open source
+                </p>
+                <h2
+                  className="text-3xl sm:text-4xl italic tracking-tight mb-2"
+                  style={{ fontFamily: "var(--font-serif)" }}
+                >
+                  The world&apos;s fastest growing
+                  <br />
+                  open source project
+                </h2>
+                <p className="text-base text-[var(--color-text-secondary)] max-w-md mb-12">
+                  0 to 130k+ GitHub stars in 68 days. OpenClaw is the fastest
+                  project to ever reach 100k stars.
+                </p>
+              </motion.div>
+
+              <StarChart />
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+                className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-8"
+              >
+                <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                  Fastest to 100k stars
+                </span>
+                <span className="text-[var(--color-border)]">|</span>
+                <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                  #1 trending on GitHub
+                </span>
+                <span className="text-[var(--color-border)]">|</span>
+                <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                  MIT licensed
+                </span>
+              </motion.div>
+            </div>
+
+            {/* Right — quote */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="border-l-2 border-[var(--color-accent)] pl-6"
             >
-              The world&apos;s fastest growing
-              <br />
-              open source project
-            </h2>
-            <p className="text-base text-[var(--color-text-secondary)] max-w-md mx-auto mb-12">
-              0 to 130k+ GitHub stars in 68 days. OpenClaw is the fastest
-              project to ever reach 100k stars.
-            </p>
-          </motion.div>
-
-          <StarChart />
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8"
-          >
-            <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-tertiary)]">
-              Fastest to 100k stars
-            </span>
-            <span className="text-[var(--color-border)]">|</span>
-            <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-tertiary)]">
-              #1 trending on GitHub
-            </span>
-            <span className="text-[var(--color-border)]">|</span>
-            <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-tertiary)]">
-              MIT licensed
-            </span>
-          </motion.div>
+              <blockquote>
+                <p
+                  className="text-xl sm:text-2xl italic leading-relaxed mb-6"
+                  style={{ fontFamily: "var(--font-serif)" }}
+                >
+                  &ldquo;Installing ClawdBot, MoltBot, and OpenClaw should be
+                  seamless&nbsp;&mdash; not a mess.&rdquo;
+                </p>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                  EasyClaw exists because getting the OpenClaw stack running
+                  should take seconds, not hours of debugging Node versions
+                  and permissions.
+                </p>
+              </blockquote>
+            </motion.div>
+          </div>
         </div>
       </section>
 
