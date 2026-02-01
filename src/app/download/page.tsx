@@ -138,19 +138,49 @@ export default function DownloadPage() {
                 Available
               </span>
             </div>
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <a
-                  href="https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/EasyClaw_latest_aarch64.dmg"
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
-                >
-                  Download for macOS (Apple Silicon)
-                </a>
-                {version && (
-                  <span className="text-[10px] font-mono font-medium text-[var(--color-text-tertiary)] border border-[var(--color-border)] px-2 py-0.5">
-                    v{version}
-                  </span>
-                )}
+            <div className="mt-4 space-y-4">
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-tertiary)] mb-2">
+                  macOS
+                </p>
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/EasyClaw_latest_aarch64.dmg"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+                  >
+                    Download .dmg (Apple Silicon)
+                  </a>
+                  {version && (
+                    <span className="text-[10px] font-mono font-medium text-[var(--color-text-tertiary)] border border-[var(--color-border)] px-2 py-0.5">
+                      v{version}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-tertiary)] mb-2">
+                  Linux
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <a
+                    href="https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/EasyClaw_latest_amd64.AppImage"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+                  >
+                    Download .AppImage
+                  </a>
+                  <a
+                    href="https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/EasyClaw_latest_amd64.deb"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+                  >
+                    .deb
+                  </a>
+                  <a
+                    href="https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/EasyClaw_latest_amd64.rpm"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+                  >
+                    .rpm
+                  </a>
+                </div>
               </div>
               {notes && (
                 <p className="text-xs text-[var(--color-text-tertiary)]">
