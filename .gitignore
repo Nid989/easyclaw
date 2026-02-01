@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Bun
+bun.lockb
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Secrets
+.env
+.env*.local
+supabase/.env
+
+# Build
+.next/
+out/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/
+.vercel
