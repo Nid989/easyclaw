@@ -24,7 +24,7 @@ export default function OpenClawWhatsAppSetup() {
         fastest path is the one-liner:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         This pulls down OpenClaw, ClawdBot (the AI engine), and MoltBot (the
@@ -139,7 +139,7 @@ export default function OpenClawWhatsAppSetup() {
         troubleshooting tips.
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
     </BlogLayout>
   );
 }

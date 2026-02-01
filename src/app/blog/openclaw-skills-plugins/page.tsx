@@ -22,7 +22,7 @@ export default function OpenClawSkillsPlugins() {
         fastest way to get set up is with <a href="/">EasyClaw</a>:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         Once that finishes, you are ready to explore what the community has built.

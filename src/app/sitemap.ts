@@ -41,7 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${BASE_URL}/install`,
+      url: `${BASE_URL}/download`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,

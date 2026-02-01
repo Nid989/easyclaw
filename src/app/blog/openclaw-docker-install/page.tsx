@@ -22,7 +22,7 @@ export default function OpenClawDockerInstall() {
         One command handles installation, configuration, and updates:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         Docker makes more sense when you need network isolation, are deploying to a shared server,

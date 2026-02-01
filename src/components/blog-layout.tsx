@@ -1,11 +1,10 @@
 "use client";
 
 import { Nav } from "@/components/nav";
-import { CopyButton } from "@/components/copy-button";
+
 import Image from "next/image";
 import Link from "next/link";
 
-const INSTALL_CMD = "curl -fsSL https://openclaw.ai/install.sh | bash";
 
 interface BlogLayoutProps {
   title: string;
@@ -76,17 +75,14 @@ export function BlogLayout({ title, description, date, children }: BlogLayoutPro
               Get started with EasyClaw
             </h2>
             <p className="text-sm text-[var(--color-text-secondary)] mb-6 max-w-md">
-              One command to install OpenClaw, ClawdBot, and MoltBot on your machine.
+              Download EasyClaw to get OpenClaw, ClawdBot, and MoltBot on your machine.
             </p>
-            <div className="relative group w-full max-w-xl">
-              <div className="relative bg-[var(--color-code-bg)] border border-white/10 font-mono text-[var(--color-code-text)] px-5 py-4 text-sm">
-                <span className="text-[var(--color-text-tertiary)] select-none">
-                  ${" "}
-                </span>
-                <span className="select-all">{INSTALL_CMD}</span>
-                <CopyButton text={INSTALL_CMD} />
-              </div>
-            </div>
+            <Link
+              href="/download"
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+            >
+              Download EasyClaw
+            </Link>
             <Link
               href="/"
               className="mt-6 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors underline underline-offset-4 decoration-[var(--color-border)]"

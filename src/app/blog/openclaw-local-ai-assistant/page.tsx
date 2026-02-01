@@ -70,7 +70,7 @@ export default function OpenClawLocalAIAssistant() {
         your terminal and run:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         That single line installs Node.js if you need it, pulls the latest stable OpenClaw release,
@@ -114,7 +114,7 @@ export default function OpenClawLocalAIAssistant() {
         <a href="/">EasyClaw homepage</a> or just run the installer directly:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
     </BlogLayout>
   );
 }

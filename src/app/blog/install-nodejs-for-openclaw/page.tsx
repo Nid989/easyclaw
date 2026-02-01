@@ -15,7 +15,7 @@ export default function InstallNodeJsForOpenClaw() {
         roadblock. The good news is you do not actually need to install it yourself.
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         That command, the EasyClaw installer, handles Node.js for you. But if you are curious
@@ -131,7 +131,7 @@ nvm use 20`}</code></pre>
         the AI assistant running with zero fuss, EasyClaw is the path of least resistance:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         No Node.js installation. No version juggling. No permission headaches. It just works.

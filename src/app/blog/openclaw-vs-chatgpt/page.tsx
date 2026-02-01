@@ -106,7 +106,7 @@ export default function OpenClawVsChatGPT() {
         configuration needed:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         You can always keep your ChatGPT subscription alongside OpenClaw. Many people use ChatGPT

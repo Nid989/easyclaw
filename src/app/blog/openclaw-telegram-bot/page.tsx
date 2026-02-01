@@ -23,7 +23,7 @@ export default function OpenClawTelegramBot() {
         EasyClaw installer handles everything in one shot:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         This installs OpenClaw along with ClawdBot and MoltBot. MoltBot is the
@@ -154,7 +154,7 @@ export default function OpenClawTelegramBot() {
         platforms like WhatsApp and Discord.
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
     </BlogLayout>
   );
 }

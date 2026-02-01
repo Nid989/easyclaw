@@ -82,7 +82,7 @@ npm ERR! notsup Actual:   {"node":"16.20.2"}`}</code></pre>
         installs native build tools, and sets up the complete toolkit in one step:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         This single command does what <code>npm install</code> cannot:

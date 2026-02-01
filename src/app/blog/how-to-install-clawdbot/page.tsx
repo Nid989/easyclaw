@@ -85,7 +85,7 @@ npm run build`}</code></pre>
         config generation, and the build step. One command:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         That's it. EasyClaw detects your operating system, installs the correct Node version

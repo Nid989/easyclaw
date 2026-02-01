@@ -1,8 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Nav } from "@/components/nav";
-import { InstallBlock } from "@/components/install-block";
 
 const fade = {
   hidden: { opacity: 0, y: 20 },
@@ -13,37 +13,43 @@ const stagger = {
   show: { transition: { staggerChildren: 0.08 } },
 };
 
-const methods = [
-  {
-    id: "curl",
-    title: "Command line",
-    desc: "The fastest way. Works on macOS, Windows, and Linux. Installs Node.js if needed.",
-    available: true,
-    content: "curl",
-  },
-  {
-    id: "desktop",
-    title: "Desktop app",
-    desc: "Native app built with Tauri. Download, open, and you're running. No terminal required.",
-    available: true,
-    content: "desktop",
-  },
-  {
-    id: "cloud",
-    title: "Cloud hosted",
-    desc: "Hosted on Supabase with S3 storage. Zero installation — sign in and start using OpenClaw.",
-    available: false,
-    badge: "Coming soon",
-  },
-];
-
 const platforms = [
-  { name: "macOS", versions: "Apple Silicon & Intel", icon: "apple" },
-  { name: "Windows", versions: "10 & 11", icon: "windows" },
-  { name: "Linux", versions: "Ubuntu, Debian, Fedora, Arch", icon: "linux" },
+  {
+    name: "macOS",
+    versions: "Apple Silicon & Intel",
+    icon: "apple",
+    available: true,
+  },
+  {
+    name: "Windows",
+    versions: "10 & 11",
+    icon: "windows",
+    available: true,
+  },
+  {
+    name: "Linux",
+    versions: "Ubuntu, Debian, Fedora, Arch",
+    icon: "linux",
+    available: true,
+  },
 ];
 
-export default function InstallPage() {
+export default function DownloadPage() {
+  const [version, setVersion] = useState<string | null>(null);
+  const [notes, setNotes] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(
+      "https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/latest.json"
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.version) setVersion(data.version);
+        if (data.notes) setNotes(data.notes);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <>
       <Nav />
@@ -59,7 +65,7 @@ export default function InstallPage() {
             variants={fade}
             className="text-xs font-medium tracking-widest uppercase text-[var(--color-text-tertiary)] mb-4"
           >
-            Install
+            Download
           </motion.p>
           <motion.h1
             variants={fade}
@@ -71,100 +77,23 @@ export default function InstallPage() {
             variants={fade}
             className="text-sm text-[var(--color-text-secondary)] max-w-md mx-auto mb-10"
           >
-            Choose how you want to install. The command line is the fastest
-            path for any platform.
+            Download EasyClaw for your platform. Native app built with Tauri —
+            no terminal required.
           </motion.p>
         </motion.div>
       </section>
 
-      {/* Install methods */}
+      {/* Platform download cards */}
       <section className="px-6 pb-20">
-        <div className="max-w-3xl mx-auto space-y-4">
-          {methods.map((m, i) => (
-            <motion.div
-              key={m.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 + i * 0.08 }}
-              className={`border p-6 transition-colors ${
-                m.available
-                  ? "bg-[var(--color-surface)] border-[var(--color-accent)]"
-                  : "bg-[var(--color-bg-alt)] border-[var(--color-border)]"
-              }`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-sm font-semibold">{m.title}</h3>
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-                    {m.desc}
-                  </p>
-                </div>
-                {m.badge && (
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-tertiary)] border border-[var(--color-border)] px-2 py-0.5 shrink-0">
-                    {m.badge}
-                  </span>
-                )}
-                {m.available && (
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-success)] border border-[var(--color-success)]/30 px-2 py-0.5 shrink-0">
-                    Available
-                  </span>
-                )}
-              </div>
-
-              {m.content === "curl" && (
-                <div className="mt-4">
-                  <InstallBlock size="sm" />
-                </div>
-              )}
-
-              {m.content === "desktop" && (
-                <div className="mt-4 flex items-center gap-3">
-                  <a
-                    href="https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/EasyClaw_latest_aarch64.dmg"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
-                  >
-                    Download for macOS (Apple Silicon)
-                  </a>
-                  <a
-                    href="https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/EasyClaw_latest_x64.dmg"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
-                  >
-                    Intel Mac
-                  </a>
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Platform support */}
-      <section className="px-6 pb-24 bg-[var(--color-bg-alt)] py-20">
         <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12"
-          >
-            <p className="text-xs font-medium tracking-widest uppercase text-[var(--color-text-tertiary)] mb-3">
-              Platform support
-            </p>
-            <h2 className="text-xl font-bold tracking-tight">
-              Runs everywhere
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {platforms.map((p, i) => (
               <motion.div
                 key={p.name}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
-                className="bg-[var(--color-surface)] border border-[var(--color-border)] p-8 text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 + i * 0.08 }}
+                className="bg-[var(--color-surface)] border border-[var(--color-accent)] p-8 text-center"
               >
                 <div className="mb-4">
                   {p.icon === "apple" && (
@@ -190,6 +119,66 @@ export default function InstallPage() {
               </motion.div>
             ))}
           </div>
+
+          {/* Desktop app download */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+            className="border p-6 bg-[var(--color-surface)] border-[var(--color-accent)]"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-semibold">Desktop app</h3>
+                <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                  Native app built with Tauri. Download, open, and you&apos;re running. No terminal required.
+                </p>
+              </div>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-success)] border border-[var(--color-success)]/30 px-2 py-0.5 shrink-0">
+                Available
+              </span>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://owxlbqepqhmqsrdixthk.supabase.co/storage/v1/object/public/releases/EasyClaw_latest_aarch64.dmg"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+                >
+                  Download for macOS (Apple Silicon)
+                </a>
+                {version && (
+                  <span className="text-[10px] font-mono font-medium text-[var(--color-text-tertiary)] border border-[var(--color-border)] px-2 py-0.5">
+                    v{version}
+                  </span>
+                )}
+              </div>
+              {notes && (
+                <p className="text-xs text-[var(--color-text-tertiary)]">
+                  {notes}
+                </p>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Cloud hosted - coming soon */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.58 }}
+            className="border p-6 mt-4 bg-[var(--color-bg-alt)] border-[var(--color-border)]"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-sm font-semibold">Cloud hosted</h3>
+                <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                  Hosted on Supabase with S3 storage. Zero installation — sign in and start using OpenClaw.
+                </p>
+              </div>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-tertiary)] border border-[var(--color-border)] px-2 py-0.5 shrink-0">
+                Coming soon
+              </span>
+            </div>
+          </motion.div>
         </div>
       </section>
 

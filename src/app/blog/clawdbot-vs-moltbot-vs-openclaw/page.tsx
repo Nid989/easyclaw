@@ -83,7 +83,7 @@ export default function ClawdBotVsMoltBotVsOpenClaw() {
         it together, and gets you to a working state:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         EasyClaw detects your OS, installs the right binaries, sets up the
@@ -116,7 +116,7 @@ export default function ClawdBotVsMoltBotVsOpenClaw() {
         this into your terminal:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
     </BlogLayout>
   );
 }

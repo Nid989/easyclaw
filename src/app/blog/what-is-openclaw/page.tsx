@@ -120,7 +120,7 @@ export default function WhatIsOpenClaw() {
         in your terminal:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         The installer detects your operating system, pulls the right binaries, sets up a default

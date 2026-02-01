@@ -76,7 +76,7 @@ export default function OpenClawRaspberryPi() {
         Pi runs. One command does everything:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         The installer detects the ARM architecture, downloads the correct Node.js binary, pulls
@@ -172,7 +172,7 @@ sudo systemctl start openclaw`}</code></pre>
         Ready to build yours? Grab the installer and get started:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         Or visit the{" "}

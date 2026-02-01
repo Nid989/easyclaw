@@ -29,7 +29,7 @@ export default function OpenClawSlackIntegration() {
         with <a href="/">EasyClaw</a> — a single command handles the entire installation:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         Once OpenClaw is running and you have confirmed it responds to prompts locally, you are

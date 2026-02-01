@@ -31,14 +31,14 @@ export function Nav() {
             How it works
           </Link>
           <Link
-            href="/install"
+            href="/download"
             className={`text-xs font-medium px-3.5 py-1.5 transition-all ${
-              pathname === "/install"
+              pathname === "/download"
                 ? "bg-[var(--color-accent)] text-[var(--color-bg)]"
                 : "bg-[var(--color-accent)] text-[var(--color-bg)] hover:bg-[var(--color-accent-hover)]"
             }`}
           >
-            Install
+            Download
           </Link>
         </div>
       </div>

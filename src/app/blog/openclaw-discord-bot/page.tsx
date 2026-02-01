@@ -24,7 +24,7 @@ export default function OpenClawDiscordBot() {
         handles the Discord connection:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         After installation, run <code>openclaw init</code> to configure your
@@ -156,7 +156,7 @@ export default function OpenClawDiscordBot() {
         Telegram, WhatsApp, and other integrations.
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
     </BlogLayout>
   );
 }

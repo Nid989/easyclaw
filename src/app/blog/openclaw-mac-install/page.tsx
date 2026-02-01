@@ -88,7 +88,7 @@ export default function OpenClawMacInstall() {
         Terminal (or iTerm, Warp, Kitty, whatever you prefer) and run:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         The installer will detect whether you are on Apple Silicon (arm64) or
@@ -139,7 +139,7 @@ export default function OpenClawMacInstall() {
         community Discord where people are quick to help.
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
     </BlogLayout>
   );
 }

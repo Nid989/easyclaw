@@ -23,7 +23,7 @@ export default function OpenClawSecurityPrivacy() {
         <a href="/">EasyClaw</a> with a single command:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         — you get a daemon process that listens on <code>localhost:3377</code> by default. Your

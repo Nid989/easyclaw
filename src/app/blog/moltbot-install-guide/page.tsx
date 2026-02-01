@@ -91,7 +91,7 @@ moltbot status`}</code></pre>
         system dependencies, or SQLite versions. Just run:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         The installer detects what's missing on your system and handles it. On macOS

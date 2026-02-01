@@ -65,7 +65,7 @@ export default function OpenClawWindowsSetup() {
         all of the above automatically. Open PowerShell and run:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         If you're in PowerShell and don't have real curl available, you can also use:

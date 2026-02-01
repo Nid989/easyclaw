@@ -90,7 +90,7 @@ nvm use 20`}</code></pre>
         script. One line:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         On Ubuntu, the script detects your distribution version and does the right thing:

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Nav } from "@/components/nav";
-import { InstallBlock } from "@/components/install-block";
+
 import { StarChart } from "@/components/star-chart";
 import { ReviewsCarousel } from "@/components/reviews-carousel";
 import Link from "next/link";
@@ -128,20 +128,25 @@ export default function Home() {
             variants={fade}
             className="text-lg sm:text-xl text-[var(--color-text-secondary)] max-w-lg mx-auto mb-10 leading-relaxed"
           >
-            The easiest way to install OpenClaw. One command. ClawdBot, MoltBot,
+            The easiest way to get OpenClaw. ClawdBot, MoltBot,
             and OpenClaw — on your hardware, in seconds.
           </motion.p>
 
           <motion.div variants={fade}>
-            <InstallBlock />
+            <Link
+              href="/download"
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-colors"
+            >
+              Download for Mac / Windows / Linux
+            </Link>
           </motion.div>
 
           <motion.div variants={fade} className="mt-6 flex items-center justify-center gap-4">
             <Link
-              href="/install"
+              href="/download"
               className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors underline underline-offset-4 decoration-[var(--color-border)]"
             >
-              Other install methods
+              All download options
             </Link>
             <span className="text-[var(--color-border)]">|</span>
             <a
@@ -347,9 +352,14 @@ export default function Home() {
             Ready?
           </h2>
           <p className="text-sm text-[var(--color-text-secondary)] mb-8">
-            Open your terminal and paste this.
+            Download EasyClaw and get started.
           </p>
-          <InstallBlock size="sm" />
+          <Link
+            href="/download"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-colors"
+          >
+            Download EasyClaw
+          </Link>
         </motion.div>
       </section>
 

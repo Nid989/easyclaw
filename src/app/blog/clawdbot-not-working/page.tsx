@@ -55,7 +55,7 @@ npm config set prefix '~/.npm-global'`}</code></pre>
         do not apply. One command resets everything:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <h2>Wrong Node.js Version</h2>
 
@@ -135,8 +135,9 @@ kill -9 <PID>`}</code></pre>
         Rename the broken config and reinstall. EasyClaw generates a fresh, valid config file:
       </p>
 
-      <pre><code>{`mv ~/.clawdbot/config.json ~/.clawdbot/config.json.bak
-curl -fsSL https://openclaw.ai/install.sh | bash`}</code></pre>
+      <pre><code>mv ~/.clawdbot/config.json ~/.clawdbot/config.json.bak</code></pre>
+
+      <p>Then <a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>download EasyClaw</a> to reinstall with a fresh config.</p>
 
       <h2>When in Doubt, Start Fresh</h2>
 
@@ -146,7 +147,7 @@ curl -fsSL https://openclaw.ai/install.sh | bash`}</code></pre>
         thing and start over in sixty seconds:
       </p>
 
-      <pre><code>curl -fsSL https://openclaw.ai/install.sh | bash</code></pre>
+      <p><a href="/download" style={{color: "var(--color-accent)", textDecoration: "underline", textUnderlineOffset: "4px"}}>Download EasyClaw</a></p>
 
       <p>
         EasyClaw installs a clean Node.js runtime, pulls the latest ClawdBot release, writes a
