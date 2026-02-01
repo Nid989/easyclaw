@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://easyclaw-six.vercel.app/sitemap.xml",
+    sitemap: "https://easyclaw.app/sitemap.xml",
   };
 }

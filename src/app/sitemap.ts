@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 
-const BASE_URL = "https://easyclaw-six.vercel.app";
+const BASE_URL = "https://easyclaw.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const blogSlugs = [
